@@ -1,17 +1,29 @@
 import store from "./store.js"
 
 const cmds={
-    "SET":(key,value)=>{
+    "SET":(...args)=>{
+        const key=args[0];
+        const valuearr = [];
+        let expiry=null;
+
+        for (let i=1;i<args.length;i++) {
+        if (args[i]==="EX") {
+            expiry=Number(args[i+1]);
+            break;
+        }
+        valuearr.push(args[i]);
+        }
+        const value=valuearr.join(" ")
         if(!key||!value){
         return "missing key or value"}
-        store.set(key,value)
+        store.set(key,value,expiry)
         return "done"
     },
     "GET":(key)=>{
         if(!key){
             return "missing key"
         }
-        const value = store.get(key)
+        const value = store.get(key)    
         return value || "not found"
     },
     "DELETE":(key)=>{
