@@ -1,23 +1,30 @@
 import net from "net"
 import dotenv from "dotenv"
+import inputparser from "./parse.js"
 dotenv.config()
 const port = process.env.port
 
 const server = net.createServer((socket) => {
-  console.log("connected");
+  console.log("connected\n");
+  let buffer = ""
   
   socket.on("data", (data) => {
+    buffer+=data.toString()
+    const recinput=buffer.split("\n")
+    buffer=recinput.pop()
+    for (let cmd of recinput){
     try{
-
-        const input=data.toString().trim()
-        socket.write(input);
-    }catch(err){
-        console.log("error",err)
+      if(!cmd.trim()) continue;
+      const res=inputparser(cmd.trim())
+      socket.write(res + '\n')
+    } catch (err) {
+      console.log("error", err.message)
     }
+  }
   });
 
   socket.on("end",()=>{
-    console.log("disconnected")
+    console.log("disconnected\n")
   })
 
   socket.on("error",(err)=>{
@@ -26,5 +33,5 @@ const server = net.createServer((socket) => {
 });
 
 server.listen(port, () => {
-  console.log(` server running on port ${port}`);
+  console.log(` server running on port ${port}\n`);
 });
