@@ -1,6 +1,7 @@
 class Store{
     constructor(){
         this.st = new Map()
+        this.maxKeys = 1000
         setInterval(()=>this.cleanup(),1000)
     }
 
@@ -9,7 +10,11 @@ class Store{
         if(givenexpiry){
             expiry= Date.now() +givenexpiry*1000
         }
-        this.st.set(key,{value,expiry})
+        if (this.st.has(key)) {
+            this.st.delete(key)
+        }
+        this.evictIfNeeded()
+        this.st.set(key,{value,expiry,lastAccessed:Date.now()})
     }
 
     get(key){
@@ -21,6 +26,11 @@ class Store{
             this.st.delete(key)
             return null
         }
+        this.st.delete(key)
+        this.st.set(key, {
+            ...data,
+            lastAccessed: Date.now()
+        })
         return data.value
     }
 
@@ -28,11 +38,19 @@ class Store{
     this.st.delete(key)
     }
     cleanup(){
-        const now =Date.now()
+        const now=Date.now()
         for (let [key,data] of this.st.entries()){
-            if(Date.now()>data.expiry){
+            if(data.expiry && now>data.expiry){
                 this.st.delete(key)
             }
+        }
+    }
+    evictIfNeeded(){
+        if (this.st.size<this.maxKeys)return
+        const oldestKey=this.st.keys().next().value;
+        if (oldestKey){
+            this.st.delete(oldestKey)
+            console.log(oldestKey)
         }
     }
 }
