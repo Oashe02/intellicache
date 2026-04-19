@@ -14,11 +14,16 @@ const server = net.createServer((socket) => {
     buffer=recinput.pop()
     for (let cmd of recinput){
     try{
-      if(!cmd.trim()) continue;
-      const res=inputparser(cmd.trim())
-      socket.write(res + '\n')
+      cmd=cmd.trim()
+      if(!cmd) continue;
+      const res=inputparser(cmd)
+      if (res !== undefined && res !== null) {
+        socket.write(res + "\n");
+      } else {
+        socket.write("null\n");
+      }
     } catch (err) {
-      console.log("error", err.message)
+      console.log("error", err.message+ "\n")
     }
   }
   });

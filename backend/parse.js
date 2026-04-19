@@ -8,8 +8,11 @@ const cmds={
 
         for (let i=1;i<args.length;i++) {
         if (args[i]==="EX") {
-            expiry=Number(args[i+1]);
-            break;
+            const val=Number(args[i+1]);
+            if(!isNaN(val)) {
+                expiry=val;
+            }
+            break
         }
         valuearr.push(args[i]);
         }
@@ -31,7 +34,37 @@ const cmds={
             return "missing key"}
         store.delete(key)
         return"done"
+    },
+    "EXISTS":(key)=>{
+        if(!key){
+            return "missing key"}
+        const data = store.st.get(key);
+        if (!data) return "false";
+        if (data.expiry && Date.now()>data.expiry){
+            store.st.delete(key);
+            return "false";
+        }
+        return "true"
+    },
+    "TTL":(key)=>{
+        const data=store.st.get(key);
+        if (data.expiry == null) return "no expiry"
+        if (!data) return "data nhi hain for this key";
+        const rem=Math.floor((data.expiry-Date.now())/1000);
+        return rem>0?rem:"expired";
+    },
+    "KEYS":()=>{
+    return JSON.stringify(Array.from(store.st.keys()));
+    },
+    "STATS":()=>{
+    let total=store.st.size;
+    let exp=0;
+
+    for (let data of store.st.values()) {
+        if (data.expiry) exp++;
     }
+    return JSON.stringify({total,exp})
+}
 }
 
 
